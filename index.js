@@ -1,5 +1,5 @@
 const express = require("express");
-const dotenv = require("dotenv").config();
+require("dotenv").config();
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -10,11 +10,11 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const locationRoutes = require("./routes/locationRoutes");
 const hotelRoutes = require("./routes/hotelRoutes");
 const discountRoutes = require("./routes/discountRoutes");
-const discountUserHotelRoutes = require("./routes/discountUserHotelRoutes");
+// const discountUserHotelRoutes = require("./routes/discountUserHotelRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const amenityRoutes = require("./routes/amenityRoutes");
 
-const PORT = process.env.PORT || 3000;
+const DB_PORT = process.env.DB_PORT || 3000;
 
 connectDB();
 
@@ -30,7 +30,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/discounts", discountRoutes);
-app.use("/api/discountUserHotel", discountUserHotelRoutes);
+// app.use("/api/discountUserHotel", discountUserHotelRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/amenities", amenityRoutes);
 
@@ -38,6 +38,6 @@ app.get("/", (req, res) => {
   res.send("now you in a Hello page");
 });
 
-app.listen(PORT, () => {
-  console.log(`I' listening in port ${PORT}`);
+app.listen(DB_PORT, () => {
+  console.log(`I' listening in port ${DB_PORT}`);
 });

@@ -1,4 +1,4 @@
-Booking = require("../models/booking");
+const Booking = require("../models/booking");
 
 const getBookings = async (req, res, next) => {
   try {
@@ -88,7 +88,7 @@ const createBooking = async (req, res, next) => {
       res.status(404);
       throw new Error("Discount is required");
     }
-    savedBooking = await newBooking.save();
+    const savedBooking = await newBooking.save();
     res.status(200).json(savedBooking);
   } catch (error) {
     next(error);
@@ -97,6 +97,22 @@ const createBooking = async (req, res, next) => {
 
 const updateBooking = async (req, res, next) => {
   try {
+    const { check_in, check_out, total_price, status, user, hotel, room, discount } = req.body;
+    const updateField = {};
+
+    if (check_in) updateField.check_in = check_in;
+    if (check_out) updateField.check_out = check_out;
+    if (total_price) updateField.total_price = total_price;
+    if (status) updateField.status = status;
+    if (user) updateField.user = user;
+    if (hotel) updateField.hotel = hotel;
+    if (room) updateField.room = room;
+    if (discount) updateField.discount = discount;
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("Please provide fields to update");
+    }
+
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },

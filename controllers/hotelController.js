@@ -2,10 +2,7 @@ const Hotel = require("../models/hotel");
 
 const getHotels = async (req, res, next) => {
   try {
-    const hotels = await Hotel.find()
-      .populate("location")
-      .populate("rooms")
-      .populate("review");
+    const hotels = await Hotel.find().populate("location").populate("review");
     if (!hotels) {
       res.status(404);
       throw new Error("There are no hotels available");
@@ -41,7 +38,6 @@ const createHotel = async (req, res, next) => {
       num_rooms,
       images,
       location,
-      rooms,
       review,
     } = req.body;
     const newHotel = new Hotel({
@@ -51,16 +47,11 @@ const createHotel = async (req, res, next) => {
       num_rooms,
       images,
       location,
-      rooms,
       review,
     });
     if (!name) {
       res.status(404);
       throw new Error("Name is required");
-    }
-    if (!property_type) {
-      res.status(404);
-      throw new Error("Property Type is required");
     }
     if (!star_rating) {
       res.status(404);
@@ -78,15 +69,7 @@ const createHotel = async (req, res, next) => {
       res.status(404);
       throw new Error("Location is required");
     }
-    if (!rooms) {
-      res.status(404);
-      throw new Error("Rooms are required");
-    }
-    if (!review) {
-      res.status(404);
-      throw new Error("Review is required");
-    }
-    savedHotel = await newHotel.save();
+    const savedHotel = await newHotel.save();
     res.status(200).json(savedHotel);
   } catch (error) {
     next(error);
@@ -95,9 +78,23 @@ const createHotel = async (req, res, next) => {
 
 const updateHotel = async (req, res, next) => {
   try {
+    const { name, property_type, star_rating, num_rooms, images, location } =
+      req.body;
+    const updateField = {};
+
+    if (name) updateField.name = name;
+    if (property_type) updateField.property_type = property_type;
+    if (star_rating) updateField.star_rating = star_rating;
+    if (num_rooms) updateField.num_rooms = num_rooms;
+    if (images) updateField.images = images;
+    if (location) updateField.location;
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("Please provide fields to update");
+    }
     const hotel = await Hotel.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateField },
       { new: true }
     );
     if (!hotel) {

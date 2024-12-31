@@ -73,9 +73,23 @@ const createRoom = async (req, res, next) => {
 
 const updateRoom = async (req, res, next) => {
   try {
+    const { room_type, room_number, price, status, hotel, amenities } =
+      req.body;
+    const updateField = {};
+    if (room_type) updateField.room_type = room_type;
+    if (room_number) updateField.room_number = room_number;
+    if (price) updateField.room_number = price;
+    if (status) updateField.status = status;
+    if (hotel) updateField.hotel = hotel;
+    if (amenities) updateField.amenities = amenities;
+    if (Object.keys(updateField).length === 0) {
+      res.status(404);
+      throw new Error("No fields provided for update");
+    }
+
     const room = await Room.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
+      updateField,
+      { $set: updateField },
       { new: true }
     );
     if (!room) {

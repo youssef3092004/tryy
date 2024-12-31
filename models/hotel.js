@@ -44,18 +44,12 @@ const hotelSchema = mongoose.Schema({
     ref: "Location",
     required: true,
   },
-  review: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Review",
-    },
-  ],
-  rooms: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Rooms",
-    },
-  ],
+  // review: [
+  //   {
+  //     type: mongoose.Schema.Types.ObjectId,
+  //     ref: "Review",
+  //   },
+  // ],
 });
 
 const Hotel = mongoose.model("Hotel", hotelSchema);

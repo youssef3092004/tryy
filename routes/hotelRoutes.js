@@ -12,7 +12,7 @@ const router = Router();
 
 router.get("/", getHotels);
 router.get("/:id", getHotel);
-router.post("/".createHotel);
+router.post("/", createHotel);
 router.put("/:id", updateHotel);
 router.delete("/:id", deleteHotel);
 

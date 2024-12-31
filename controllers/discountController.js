@@ -1,4 +1,4 @@
-Discount = require("../models/discountModel");
+const Discount = require("../models/discount");
 
 const getDiscounts = async (req, res, next) => {
   try {
@@ -52,11 +52,7 @@ const createDiscount = async (req, res, next) => {
       res.status(404);
       throw new Error("End Date is required");
     }
-    if (!status) {
-      res.status(404);
-      throw new Error("Status is required");
-    }
-    savedDiscount = await newDiscount.save();
+    const savedDiscount = await newDiscount.save();
     return res.status(200).json(savedDiscount);
   } catch (error) {
     next(error);
@@ -65,15 +61,32 @@ const createDiscount = async (req, res, next) => {
 
 const updateDiscount = async (req, res, next) => {
   try {
-    const discount = await Discount.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!discount) {
+    const { code, discount, start_date, end_date, status } = req.body;
+    const updateField = {};
+
+    if (code) updateField.code = code;
+    if (discount) updateField.discount = discount;
+    if (start_date) updateField.start_date = start_date;
+    if (end_date) updateField.end_date = end_date;
+    if (status) updateField.status = status;
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("Please provide fields to update");
+    }
+
+    const diiscount = await Discount.findByIdAndUpdate(
+      req.params.id,
+      updateField,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    if (!diiscount) {
       res.status(404);
       throw new Error("There is no discount by this ID");
     }
-    return res.status(200).json(discount);
+    return res.status(200).json(diiscount);
   } catch (error) {
     next(error);
   }

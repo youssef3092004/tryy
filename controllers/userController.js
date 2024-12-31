@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const bcrypt = require("bcrypt");
 
 const getUsers = async (req, res, next) => {
   try {
@@ -68,8 +69,8 @@ const createUser = async (req, res, next) => {
       res.status(404);
       throw new Error("Password is required");
     }
-    savedUser = await newUser.save();
-    res.status(200).json(savedUser);
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
   } catch (error) {
     next(error);
   }
@@ -80,18 +81,33 @@ const updateUser = async (req, res, next) => {
     const { username, fname, lname, address, phone, email, password } =
       req.body;
 
-    updateUser = {
-      username,
-      fname,
-      lname,
-      address,
-      phone,
-      email,
-    };
-    if (password) {
-      updateUser.password = await bcrypt.hash(password, 10);
+    const updateField = {};
+    if (username) {
+      updateField.username = username;
     }
-    const user = await User.findByIdAndUpdate(rq.params.id, updateUser, {
+    if (fname) {
+      updateField.fname = fname;
+    }
+    if (lname) {
+      updateField.lname = lname;
+    }
+    if (address) {
+      updateField.address = address;
+    }
+    if (phone) {
+      updateField.phone = phone;
+    }
+    if (email) {
+      updateField.email = email;
+    }
+    if (password) {
+      updateField.password = await bcrypt.hash(password, 10);
+    }
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("No fields provided for update");
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, updateField, {
       new: true,
     });
     if (!user) {

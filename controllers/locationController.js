@@ -51,7 +51,7 @@ const createLocation = async (req, res, next) => {
       res.status(404);
       throw new Error("Zip Code is required");
     }
-    savedLocation = await newLocation.save();
+    const savedLocation = await newLocation.save();
     return res.status(200).json(savedLocation);
   } catch (error) {
     next(error);
@@ -60,9 +60,23 @@ const createLocation = async (req, res, next) => {
 
 const updateLocation = async (req, res, next) => {
   try {
+    const { country, city, address, zip_code } = req.body;
+    const updateField = {};
+
+    if (country) updateField.country = country;
+    if (city) updateField.city = city;
+    if (address) updateField.address = address;
+    if (zip_code) updateField.zip_code = zip_code;
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("Please provide fields to update");
+    }
+
     const location = await Location.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      {
+        $set: updateField,
+      },
       { new: true }
     );
     if (!location) {

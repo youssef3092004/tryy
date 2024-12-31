@@ -53,8 +53,8 @@ const createReview = async (req, res, next) => {
       res.status(404);
       throw new Error("Hotel is required");
     }
-    savedReview = await newReview.save();
-    res.status(200).json(savedReview);
+    const savedReview = await newReview.save();
+    res.status(201).json(savedReview);
   } catch (error) {
     next(error);
   }
@@ -62,9 +62,21 @@ const createReview = async (req, res, next) => {
 
 const updateReview = async (req, res, next) => {
   try {
+    const { rating, description, user, hotel } = req.body;
+    const updateField = {};
+
+    if (rating) updateField.rating = rating;
+    if (description) updateField.description = description;
+    if (user) updateField.user = user;
+    if (hotel) updateField.hotel = hotel;
+    if (Object.keys(updateField).length === 0) {
+      res.status(400);
+      throw new Error("No fields provided for update");
+    }
+
     const review = await Review.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateField },
       { new: true }
     );
     if (!review) {
@@ -80,7 +92,7 @@ const updateReview = async (req, res, next) => {
 const deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
-    if (!review) {  
+    if (!review) {
       res.status(404);
       throw new Error("Cannot Delete The Review");
     }

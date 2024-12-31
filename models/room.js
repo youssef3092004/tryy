@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
-roomSchema = new mongoose.Schema({
+const roomSchema = new mongoose.Schema({
   id: {
     type: String,
     default: uuidv4,

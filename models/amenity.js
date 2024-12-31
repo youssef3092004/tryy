@@ -26,12 +26,6 @@ const amenitySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  hotel_amenities: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Hotel",
-    },
-  ],
 });
 
 const Amenity = mongoose.model("Amenity", amenitySchema);
