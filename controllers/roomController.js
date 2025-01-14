@@ -1,26 +1,47 @@
-const Room = require("../models/room");
+const Room = require("../models/roomModel");
+
+/**
+ * @function getRooms
+ * @description Retrieves all rooms available in the database.
+ * @route GET /api/rooms
+ * @access Public
+ * @returns {JSON} JSON object containing an array of all rooms.
+ * @throws {Error} If no rooms are available.
+ *
+ * This function fetches all rooms and populates the related hotel and amenities details.
+ * If no rooms are found, it throws an error.
+ */
 
 const getRooms = async (req, res, next) => {
   try {
-    const rooms = await Room.find().populate("hotel").populate("amenities");
-    if (!rooms) {
-      res.status(404);
-      throw new Error("There are no rooms available");
+    const rooms = await Room.find().populate("hotel amenities").exec();
+    if (rooms.length === 0) {
+      return next({ status: 404, message: "There are no rooms available" });
     }
-    return res.status(200).json(rooms);
+    res.status(200).json(rooms);
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * @function getRoom
+ * @description Retrieves a single room by its ID.
+ * @route GET /api/rooms/:id
+ * @access Public
+ * @param {string} id - The ID of the room to retrieve.
+ * @returns {JSON} JSON object containing the room details, including related hotel and amenities.
+ * @throws {Error} If no room is found with the provided ID.
+ *
+ * This function fetches a single room by its ID and populates the related hotel and amenities details.
+ * If the room with the provided ID does not exist, it throws an error.
+ */
+
 const getRoom = async (req, res, next) => {
   try {
-    const room = await Room.findById(req.params.id)
-      .populate("hotel")
-      .populate("amenities");
+    const room = await Room.findById(req.params.id).populate("hotel").exec();
     if (!room) {
-      res.status(404);
-      throw new Error("There is no room by this ID");
+      return next({ status: 404, message: "There are no room available" });
     }
     res.status(200).json(room);
   } catch (error) {
@@ -28,6 +49,17 @@ const getRoom = async (req, res, next) => {
   }
 };
 
+/**
+ * @function createRoom
+ * @description Creates a new room in the database.
+ * @route POST /api/rooms
+ * @access Private
+ * @returns {JSON} JSON object containing the newly created room.
+ * @throws {Error} If any required field is missing.
+ *
+ * This function validates the required fields (room type, number, price, status, hotel, and amenities)
+ * and saves a new room to the database. If any field is missing, an error is thrown with the appropriate message.
+ */
 const createRoom = async (req, res, next) => {
   try {
     const { room_type, room_number, price, status, hotel, amenities } =
@@ -71,6 +103,17 @@ const createRoom = async (req, res, next) => {
   }
 };
 
+/**
+ * @function updateRoom
+ * @description Updates an existing room's details in the database.
+ * @route PUT /api/rooms/:id
+ * @access Private
+ * @returns {JSON} JSON object containing the updated room details.
+ * @throws {Error} If no fields are provided for update or if the room is not found.
+ *
+ * This function checks for provided fields and updates the corresponding room details in the database.
+ * If no fields are provided, an error is thrown. The room is then updated and returned in the response.
+ */
 const updateRoom = async (req, res, next) => {
   try {
     const { room_type, room_number, price, status, hotel, amenities } =
@@ -102,6 +145,20 @@ const updateRoom = async (req, res, next) => {
   }
 };
 
+
+/**
+ * @function deleteRoom
+ * @description Deletes a room from the database by its ID.
+ * @route DELETE /api/rooms/:id
+ * @access Private
+ * @param {string} id - The ID of the room to delete.
+ * @returns {JSON} JSON message indicating the deletion success.
+ * @throws {Error} If no room is found by the given ID.
+ *
+ * This function attempts to delete the room with the given ID.
+ * If no room is found, it returns an error. If successful, it responds
+ * with a success message indicating the room was deleted.
+ */
 const deleteRoom = async (req, res, next) => {
   try {
     const room = await Room.findByIdAndDelete(req.params.id);

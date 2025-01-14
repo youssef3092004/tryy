@@ -1,111 +1,63 @@
-const Payment = require("../models/payment");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const Booking = require("../models/bookingModel");
+const Hotel = require("../models/hotelModel");
+require("dotenv").config();
 
-const getPayments = async (req, res, next) => {
+const checkout = async (req, res, next) => {
   try {
-    const payment = await Payment.find().populate("user").populate("booking");
-    if (!payment) {
-      res.status(404);
-      throw new Error("There are no payments available");
-    }
-    return res.status(200).json(payment);
-  } catch (error) {
-    next(error);
-  }
-};
+    const bookingId = req.body.bookingId;
+    const booking = await Booking.findById(bookingId).populate("room");
 
-const getPayment = async (req, res, next) => {
-  try {
-    const payment = await Payment.findById(req.params.id)
-      .populate("user")
-      .populate("booking");
-    if (!payment) {
-      res.status(404);
-      throw new Error("There is no payment by this ID");
-    }
-    return res.status(200).json(payment);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const createPayment = async (req, res, next) => {
-  try {
-    const { payment_mathond, status, user, booking } = req.body;
-    const newPayment = new Payment({
-      payment_mathond,
-      status,
-      user,
-      booking,
-    });
-    if (!payment_mathond) {
-      res.status(404);
-      throw new Error("Payment Mathond is required");
-    }
-    if (!status) {
-      res.status(404);
-      throw new Error("Status is required");
-    }
-    if (!user) {
-      res.status(404);
-      throw new Error("User is required");
-    }
     if (!booking) {
-      res.status(404);
-      throw new Error("Booking is required");
+      const error = new Error(`Booking not found with id of ${bookingId}`);
+      error.statusCode = 404;
+      return next(error);
     }
-    const savedPayment = await newPayment.save();
-    res.status(200).json(savedPayment);
+
+    const nights =
+      (booking.check_out - booking.check_in) / (1000 * 60 * 60 * 24);
+
+    if (nights <= 0 || isNaN(nights)) {
+      const error = new Error(
+        "Invalid booking dates. Check-in date must be before check-out date, and the duration must be a valid number of nights."
+      );
+      error.statusCode = 400;
+      return next(error);
+    }
+    const hotel = await Hotel.findById(booking.hotel);
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: `Hotel not found with id of ${booking.hotel}`,
+      });
+    }
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Booking for Hotel: ${hotel.name} - Room: ${booking.room.room_type}`,
+              description: `Check-in: ${booking.check_in} - Check-out: ${booking.check_out}`,
+            },
+            unit_amount: booking.room.price * 100,
+          },
+          quantity: nights,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.BASE_URL}/cancel`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: session.url,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-const updatePayment = async (req, res, next) => {
-  try {
-    const { payment_mathond, status, user, booking } = req.body;
-    const updateField = {};
-
-    if (payment_mathond) updateField.payment_mathond = payment_mathond;
-    if (status) updateField.status = status;
-    if (user) updateField.user = user;
-    if (booking) updateField.booking = booking;
-    if (Object.keys(updateField).length === 0) {
-      res.status(400);
-      throw new Error("No fields provided for update");
-    }
-
-    const payment = await Payment.findByIdAndUpdate(
-      req.updateField,
-      { $set: updateField },
-      { new: true }
-    );
-    if (!payment) {
-      res.status(400);
-      throw new Error("no payment with this id" + req.params.id);
-    }
-    res.status(200).json(payment);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deletePayment = async (req, res, next) => {
-  try {
-    const payment = await Payment.findByIdAndDelete(req.params.id);
-    if (!payment) {
-      res.status(400);
-      throw new Error("no payment with this id" + req.params.id);
-    }
-    res.status(200).json(payment);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = {
-  getPayments,
-  getPayment,
-  createPayment,
-  updatePayment,
-  deletePayment,
-};
+module.exports = { checkout };
